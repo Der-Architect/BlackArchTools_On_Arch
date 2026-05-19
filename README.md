@@ -1,265 +1,137 @@
 # BlackArchTools_On_Arch
 
-## Install all BlackArch tools on Arch-based Linux
+> **Educational / authorized use only.** Use BlackArch tools only on systems, networks, and data you own or are explicitly permitted to test. Misuse may be illegal and unethical.
 
-This guide shows the most reliable way to install the **BlackArch repository on top of an existing Arch Linux or Arch-based system** and then install **all currently available BlackArch packages**.
+A practical guide for adding the BlackArch repository to an Arch-based Linux system and installing the available BlackArch packages as reliably as possible.
 
-> **Important:** No guide can honestly guarantee a "100% no-fail" install for *all* BlackArch tools, because package availability, upstream changes, mirror state, file conflicts, disk space, RAM, and network issues can change over time. This guide is written to maximize success and minimize common failures.
+## What this repository provides
 
-## What this guide does
+- A straightforward BlackArch installation guide for Arch-based Linux
+- A safer full-install workflow
+- Recovery steps for common `pacman`, mirror, signature, and conflict problems
+- Quick commands for users who already know what they are doing
 
-- Adds the official BlackArch repository to your system using the official `strap.sh` method.
-- Updates your Arch package databases and system packages.
-- Installs all BlackArch tools available through the repository.
-- Includes checks and recovery steps for the most common failure points.
+## Important note
 
-## Best recommendation before you start
+No guide can honestly guarantee a **100% no-fail install of every BlackArch package** at all times. Upstream package changes, mirror lag, keyring issues, broken dependencies, local system state, disk space, and network problems can all affect results.
 
-Installing **every** BlackArch package is very large and can take a long time. It may also pull in many dependencies you do not need.
+This README is written to maximize success on a fully updated Arch-based system.
 
-If you only need specific tool classes, it is often better to install by category:
+---
+
+## Recommended approach
+
+If you do **not** truly need every package, install only the categories you need:
 
 ```bash
 sudo pacman -Sg | grep blackarch
 sudo pacman -S blackarch-<category>
 ```
 
-If you still want **everything**, follow the full procedure below.
-
----
+If you still want the full toolset, use the procedure below.
 
 ## Requirements
 
-Before installing, make sure your system has:
+Before starting, make sure you have:
 
-- A working Arch Linux or Arch-based installation
+- An Arch Linux or Arch-based Linux system
+- `sudo` privileges
 - Stable internet access
-- `sudo` access
 - Plenty of free disk space
-- Updated keyrings and package databases
-- `multilib` enabled if your system needs it
+- An updated base system
+- `multilib` enabled if required by your setup
 
-## Step 1: Fully update your Arch system first
-
-Run:
+## Step 1: Update the base system
 
 ```bash
 sudo pacman -Syu
 ```
 
-If this updates core packages like `pacman`, `glibc`, or keyrings, reboot once before continuing:
+If major packages were updated, reboot once:
 
 ```bash
 sudo reboot
 ```
 
-After reboot, re-run:
+Then update again:
 
 ```bash
 sudo pacman -Syu
 ```
 
-Do not continue until your base system updates cleanly.
+## Step 2: Enable `multilib` if needed
 
-## Step 2: Enable multilib if it is disabled
-
-Edit `/etc/pacman.conf` and make sure this section is enabled:
+In `/etc/pacman.conf`, ensure this section is enabled:
 
 ```ini
 [multilib]
 Include = /etc/pacman.d/mirrorlist
 ```
 
-Then refresh package databases:
+Then refresh:
 
 ```bash
 sudo pacman -Syu
 ```
 
-## Step 3: Download and verify the official BlackArch strap script
-
-Download the script:
+## Step 3: Download and verify the BlackArch bootstrap script
 
 ```bash
 curl -O https://blackarch.org/strap.sh
-```
-
-Verify its SHA1 checksum:
-
-```bash
 echo 00688950aaf5e5804d2abebb8d3d3ea1d28525ed strap.sh | sha1sum -c
-```
-
-If the checksum does **not** match, stop and download it again.
-
-Make it executable:
-
-```bash
 chmod +x strap.sh
 ```
 
-## Step 4: Add the BlackArch repository
+If checksum verification fails, do **not** continue.
 
-Run:
+## Step 4: Add the BlackArch repository
 
 ```bash
 sudo ./strap.sh
 ```
 
-This sets up the BlackArch repository and signing keys on your system.
-
-If keyring-related problems appear later, try:
+If keyring issues appear later, run:
 
 ```bash
 sudo pacman-key --init
 sudo pacman-key --populate archlinux blackarch
 ```
 
-## Step 5: Refresh and fully sync packages
-
-Run:
+## Step 5: Force-refresh package databases
 
 ```bash
 sudo pacman -Syyu
 ```
 
-This forces a fresh sync of repository databases and upgrades packages.
-
-## Step 6: Confirm the BlackArch repository is available
-
-List BlackArch groups:
+## Step 6: Confirm BlackArch is visible
 
 ```bash
 sudo pacman -Sg | grep blackarch
-```
-
-List all BlackArch packages:
-
-```bash
-sudo pacman -Sgg | grep blackarch | cut -d' ' -f2 | sort -u
-```
-
-Count them:
-
-```bash
 sudo pacman -Sgg | grep blackarch | cut -d' ' -f2 | sort -u | wc -l
 ```
 
-## Step 7: Install all BlackArch tools
+## Step 7: Install all BlackArch packages
 
-### Option A: Install the meta group directly
-
-Try this first:
+Try the normal group install first:
 
 ```bash
 sudo pacman -S blackarch
 ```
 
-### Option B: If you hit file-conflict or partial-upgrade style issues
-
-Use the more forceful official-style recovery approach:
+If conflicts block installation, use:
 
 ```bash
 sudo pacman -Syyu --needed --overwrite='*' blackarch
 ```
 
-This is the most practical command when package file conflicts block installation.
-
-## Step 8: If installing `blackarch` group is incomplete, install all listed packages explicitly
-
-Generate the package list and install everything:
-
-```bash
-sudo pacman -Sgg | grep blackarch | cut -d' ' -f2 | sort -u > blackarch-package-list.txt
-sudo pacman -S --needed --overwrite='*' $(cat blackarch-package-list.txt)
-```
-
-If your shell complains that the argument list is too long, use batching:
-
-```bash
-cat blackarch-package-list.txt | xargs -r sudo pacman -S --needed --overwrite='*'
-```
-
-## Recommended safer install flow
-
-For better reliability on many systems, use this order:
-
-```bash
-sudo pacman -Syu
-curl -O https://blackarch.org/strap.sh
-echo 00688950aaf5e5804d2abebb8d3d3ea1d28525ed strap.sh | sha1sum -c
-chmod +x strap.sh
-sudo ./strap.sh
-sudo pacman -Syyu
-sudo pacman -S --needed --overwrite='*' blackarch
-```
-
-If that does not install everything:
+## Step 8: Fallback method if the group install is incomplete
 
 ```bash
 sudo pacman -Sgg | grep blackarch | cut -d' ' -f2 | sort -u > blackarch-package-list.txt
 cat blackarch-package-list.txt | xargs -r sudo pacman -S --needed --overwrite='*'
 ```
 
----
-
-## Troubleshooting
-
-### 1. Keyring or signature errors
-
-Try:
-
-```bash
-sudo pacman-key --init
-sudo pacman-key --populate archlinux blackarch
-sudo pacman -Syyu
-```
-
-### 2. File exists / failed to commit transaction
-
-Try:
-
-```bash
-sudo pacman -Syyu --needed --overwrite='*' blackarch
-```
-
-Or for all packages:
-
-```bash
-cat blackarch-package-list.txt | xargs -r sudo pacman -S --needed --overwrite='*'
-```
-
-### 3. Mirror sync or download failures
-
-- Wait a few minutes and retry.
-- Make sure your normal Arch mirrors are healthy.
-- Refresh again:
-
-```bash
-sudo pacman -Syy
-```
-
-### 4. Out-of-date Arch base system
-
-If the install keeps failing, first make sure the base system is fully current:
-
-```bash
-sudo pacman -Syu
-```
-
-Then retry the BlackArch installation.
-
-### 5. Not enough disk space
-
-Installing all BlackArch tools can consume a very large amount of storage. Free space before retrying:
-
-```bash
-df -h
-```
-
-### 6. One or a few packages fail
-
-Sometimes a small number of packages may fail because of temporary upstream issues. To identify them, install from the generated package list in smaller batches:
+If you need to isolate failures in smaller batches:
 
 ```bash
 split -l 50 blackarch-package-list.txt blackarch-batch-
@@ -269,55 +141,9 @@ for f in blackarch-batch-*; do
 done
 ```
 
-This helps isolate problem packages instead of stopping the whole install.
-
 ---
 
-## Verify installation
-
-Search for BlackArch packages:
-
-```bash
-pacman -Qs blackarch
-```
-
-Check if common categories are visible:
-
-```bash
-pacman -Sg | grep blackarch
-```
-
-Check whether a tool is installed:
-
-```bash
-pacman -Q <package_name>
-```
-
----
-
-## Reality check
-
-If your goal is a practical and stable security workstation, installing **all** BlackArch tools is usually not the best choice. A better approach is:
-
-1. Add the BlackArch repo
-2. Install only the categories you actually need
-3. Keep the system updated with:
-
-```bash
-sudo pacman -Syu
-```
-
----
-
-## Official references used for this guide
-
-This README is based on the official BlackArch installation and guide pages, including:
-
-- the official install/download instructions
-- the BlackArch installation tutorial
-- the official guide/quick-guide references
-
-## Quick copy-paste version
+## Quick install
 
 ```bash
 sudo pacman -Syu
@@ -329,9 +155,65 @@ sudo pacman -Syyu
 sudo pacman -S --needed --overwrite='*' blackarch
 ```
 
-If needed:
+---
+
+## Troubleshooting
+
+### Keyring or signature issues
 
 ```bash
-sudo pacman -Sgg | grep blackarch | cut -d' ' -f2 | sort -u > blackarch-package-list.txt
-cat blackarch-package-list.txt | xargs -r sudo pacman -S --needed --overwrite='*'
+sudo pacman-key --init
+sudo pacman-key --populate archlinux blackarch
+sudo pacman -Syyu
 ```
+
+### File conflict errors
+
+```bash
+sudo pacman -Syyu --needed --overwrite='*' blackarch
+```
+
+### Mirror/database issues
+
+```bash
+sudo pacman -Syy
+```
+
+Then retry the install.
+
+### Disk space check
+
+```bash
+df -h
+```
+
+### Verify packages
+
+```bash
+pacman -Qs blackarch
+pacman -Sg | grep blackarch
+pacman -Q <package_name>
+```
+
+---
+
+## Disclaimer and ethical use
+
+This repository and guide are for:
+
+- security research
+- lab environments
+- defensive testing
+- education
+- authorized penetration testing
+
+Do **not** use these tools against systems or services without explicit permission.
+
+---
+
+## Suggested next improvements
+
+- Add a dedicated `docs/full-install-guide.md`
+- Add screenshots or terminal examples
+- Add category-based install examples
+- Add a small verification script for post-install checks
