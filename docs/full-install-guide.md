@@ -154,6 +154,13 @@ done
 ## Verification
 
 ```bash
+chmod +x scripts/verify-blackarch-install.sh
+./scripts/verify-blackarch-install.sh
+```
+
+You can also run:
+
+```bash
 pacman -Qs blackarch
 pacman -Sg | grep blackarch
 pacman -Q <package_name>

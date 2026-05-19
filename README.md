@@ -31,8 +31,15 @@ sudo pacman -S --needed --overwrite='*' blackarch
 
 ## More documentation
 
-- Full guide: `docs/full-install-guide.md`
-- Verification script: `scripts/verify-blackarch-install.sh`
+- Full guide: [`docs/full-install-guide.md`](docs/full-install-guide.md)
+- Verification script: [`scripts/verify-blackarch-install.sh`](scripts/verify-blackarch-install.sh)
+
+## Run the verification script
+
+```bash
+chmod +x scripts/verify-blackarch-install.sh
+./scripts/verify-blackarch-install.sh
+```
 
 ## Important note
 
